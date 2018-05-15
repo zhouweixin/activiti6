@@ -1,0 +1,4 @@
+01-activiti/.gitignore
+01-activiti/target/.gitignore
+01-activiti/target/maven-status/maven-compiler-plugin/compile/.gitignore
+01-activiti/target/maven-status/maven-compiler-plugin/testCompile/.gitignore
