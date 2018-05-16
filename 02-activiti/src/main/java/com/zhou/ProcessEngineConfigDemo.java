@@ -21,8 +21,12 @@ public class ProcessEngineConfigDemo {
 		// 默认加载:activiti.cfg.xml文件, bean为processEngineConfiguration
 		ProcessEngineConfiguration config = ProcessEngineConfiguration
 				.createProcessEngineConfigurationFromResourceDefault();
-
+		
+		// 创建引擎
+		ProcessEngine processEngine = config.buildProcessEngine();
 		System.out.println("test1-引擎名称: " + config.getProcessEngineName());
+		System.out.println("test1-引擎名称: " + processEngine.getName());
+		
 		System.out.println();
 	}
 

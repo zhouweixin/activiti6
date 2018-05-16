@@ -126,10 +126,10 @@ test5-jdbcDriver: org.h2.Driver
 **继承关系**
 - ProcessEngineConfiguration
     - ProcessEngineConfigurationImpl
-        - SpringProcessConfiguration
-        - JtaProcessEngineConfiguration
         - StandaloneProcessEngineConfiguration
             - StandaloneInMemProcessEngineConfiguration
+        - SpringProcessConfiguration
+        - JtaProcessEngineConfiguration
 
 # 2.数据源配置:DatabaseConfigDemo.java
 ### (1)DBCP数据源-配置文件 
