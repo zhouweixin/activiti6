@@ -239,3 +239,72 @@ test2-数据源类 = org.apache.commons.dbcp2.BasicDataSource
 	</bean>
 </beans>
 ```
+
+# 3.自定义流程引擎配置类, 继承ProcessEngineConfigurationImpl
+
+MyProcessEngineConfiguration.java
+
+```java
+public class MyProcessEngineConfiguration extends ProcessEngineConfigurationImpl {
+
+	private String name;
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public CommandInterceptor createTransactionInterceptor() {
+		return null;
+	}
+}
+```
+
+配置文件my-process-cfg.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 自定义引擎配置 -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 配置自定义的bean -->
+	<bean id="myProcessEngineConfiguration"
+		class="com.zhou.MyProcessEngineConfiguration">
+		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/actdb" />
+		<property name="jdbcDriver" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUsername" value="root" />
+		<property name="jdbcPassword" value="root" />
+		<property name="databaseSchemaUpdate" value="true" />
+		<property name="databaseType" value="mysql" />
+		<property name="name" value="testName"></property>
+	</bean>
+</beans>
+```
+
+测试类
+
+```java
+public class TestMyProcessEngineConfig {
+	@Test
+	public void test1() {
+		MyProcessEngineConfiguration config = (MyProcessEngineConfiguration)ProcessEngineConfiguration.createProcessEngineConfigurationFromResource("my-process-cfg.xml", "myProcessEngineConfiguration");
+		ProcessEngine processEngine = config.buildProcessEngine();
+		System.out.println("测试名称: " + config.getName());
+		System.out.println("引擎名称: " + processEngine.getName());
+	}	
+}
+```
+
+输出
+
+```
+测试名称: testName
+引擎名称: default
+```
