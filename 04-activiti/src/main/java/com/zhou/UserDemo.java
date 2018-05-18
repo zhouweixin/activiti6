@@ -41,7 +41,7 @@ public class UserDemo {
 		boolean b1 = identityService.checkPassword("1", "123456");
 		boolean b2 = identityService.checkPassword("1", "asdfas");
 
-		System.out.println("验证结果: " + b1);
-		System.out.println("验证结果: " + b2);
+		System.out.println("123456--验证结果: " + b1);
+		System.out.println("asdfas--验证结果: " + b2);
 	}
 }
