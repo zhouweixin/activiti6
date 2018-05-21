@@ -6,6 +6,7 @@ import org.activiti.engine.IdentityService;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.identity.Group;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
@@ -13,6 +14,10 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.junit.Test;
 
 public class Main {
+	
+	public static void main(String[] args) {
+		new Main().test2();
+	}
 
 	/**
 	 * 流程权限设置与查询
@@ -100,5 +105,29 @@ public class Main {
 		for(User user:processDefinition2Users) {
 			System.out.println(String.format("procDef2 : %s", user.getLastName()));			
 		}
+	}
+
+	@Test
+	public void test2() {
+		// 通过默认配置文件加载引擎
+		ProcessEngine engine = ProcessEngines.getDefaultProcessEngine();
+		// 身份服务
+		IdentityService identityService = engine.getIdentityService();
+		
+		// 添加用户组1
+		Group group1 = identityService.newGroup("");
+		group1.setId(null);
+		group1.setName("group1");
+		identityService.saveGroup(group1);
+		
+		// 添加用户组2
+		Group group2 = identityService.newGroup("");
+		group2.setId(null);
+		group2.setName("group2");
+		identityService.saveGroup(group2);
+		
+		System.out.println("用户组:");
+		System.out.println(String.format("group1.id = %s, group1.name = %s", group1.getId(), group1.getName()));
+		System.out.println(String.format("group2.id = %s, group2.name = %s", group2.getId(), group2.getName()));
 	}
 }
