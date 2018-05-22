@@ -338,3 +338,83 @@ for(Group g : groups2) {
 deploy1--group2
 deploy2--group2
 ```
+
+## (3) 流程分配给用户和用户组的权限会保存在表里
+
+表名: ACT_RU_IDENTITYLINK
+接口: IdentityLink
+子接口: IdentityLinkEntity
+实现类: IdentityLinkEntityImpl
+
+例子
+
+```java
+public void test3() {
+	ProcessEngine engine = ProcessEngines.getDefaultProcessEngine();
+	IdentityService identityService = engine.getIdentityService();
+	RepositoryService repositoryService = engine.getRepositoryService();
+	
+	// 分别添加3个用户
+	User user1 = identityService.newUser("");
+	user1.setId(null);
+	user1.setLastName("user1");
+	identityService.saveUser(user1);
+	
+	User user2 = identityService.newUser("");
+	user2.setId(null);
+	user2.setLastName("user2");
+	identityService.saveUser(user2);
+	
+	User user3 = identityService.newUser("");
+	user3.setId(null);
+	user3.setLastName("user3");	
+	identityService.saveUser(user3);
+	
+	Deployment deploy1 = repositoryService.createDeployment().addClasspathResource("process1.bpmn").name("deploy1").deploy();
+	Deployment deploy2 = repositoryService.createDeployment().addClasspathResource("process2.bpmn").name("deploy2").deploy();
+	
+	ProcessDefinition procDef1 = repositoryService.createProcessDefinitionQuery().deploymentId(deploy1.getId()).singleResult();
+	ProcessDefinition procDef2 = repositoryService.createProcessDefinitionQuery().deploymentId(deploy2.getId()).singleResult();
+	
+	repositoryService.addCandidateStarterUser(procDef1.getId(), user1.getId());
+	repositoryService.addCandidateStarterUser(procDef1.getId(), user2.getId());
+	repositoryService.addCandidateStarterUser(procDef2.getId(), user2.getId());
+	repositoryService.addCandidateStarterUser(procDef2.getId(), user3.getId());
+	
+	// ===================开始查询======================
+	List<IdentityLink> procDef1Users = repositoryService.getIdentityLinksForProcessDefinition(procDef1.getId());
+	List<IdentityLink> procDef2Users = repositoryService.getIdentityLinksForProcessDefinition(procDef2.getId());
+	
+	for(IdentityLink identityLink : procDef1Users) {
+		System.out.println(String.format("procDef.id = %s, user.id = %s", identityLink.getProcessDefinitionId(), identityLink.getUserId()));
+	}
+	
+	for(IdentityLink identityLink : procDef2Users) {
+		System.out.println(String.format("procDef.id = %s, user.id = %s", identityLink.getProcessDefinitionId(), identityLink.getUserId()));
+	}
+	
+	List<User> users1 = identityService.createUserQuery().potentialStarter(procDef1.getId()).list();
+	List<User> users2 = identityService.createUserQuery().potentialStarter(procDef2.getId()).list();
+	
+	for(User user : users1) {
+		System.out.println(String.format("procDef1.name = %s, user.name = %s", procDef1.getName(), user.getLastName()));
+	}
+	
+	for(User user : users2) {
+		System.out.println(String.format("procDef1.name = %s, user.name = %s", procDef2.getName(), user.getLastName()));
+	}
+}
+```
+
+结果
+
+```
+procDef.id = process1:27:115007, user.id = 115001
+procDef.id = process1:27:115007, user.id = 115002
+procDef.id = process2:25:115011, user.id = 115002
+procDef.id = process2:25:115011, user.id = 115003
+procDef1.name = process1, user.name = user1
+procDef1.name = process1, user.name = user2
+procDef1.name = process2, user.name = user2
+procDef1.name = process2, user.name = user3
+```

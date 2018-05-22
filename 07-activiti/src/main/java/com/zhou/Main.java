@@ -11,12 +11,13 @@ import org.activiti.engine.identity.User;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.task.IdentityLink;
 import org.junit.Test;
 
 public class Main {
 
 	public static void main(String[] args) {
-		new Main().test2();
+		new Main().test3();
 	}
 
 	/**
@@ -109,6 +110,9 @@ public class Main {
 		}
 	}
 
+	/**
+	 * 通过用户组分配流程权限给用户及查询
+	 */
 	@Test
 	public void test2() {
 		// 通过默认配置文件加载引擎
@@ -247,6 +251,66 @@ public class Main {
 		
 		for(Group g : groups2) {
 			System.out.println(String.format("deploy2--%s", g.getName()));
+		}
+	}
+
+	/**
+	 * 通过IdentityLink查询
+	 */
+	@Test
+	public void test3() {
+		ProcessEngine engine = ProcessEngines.getDefaultProcessEngine();
+		IdentityService identityService = engine.getIdentityService();
+		RepositoryService repositoryService = engine.getRepositoryService();
+		
+		// 分别添加3个用户
+		User user1 = identityService.newUser("");
+		user1.setId(null);
+		user1.setLastName("user1");
+		identityService.saveUser(user1);
+		
+		User user2 = identityService.newUser("");
+		user2.setId(null);
+		user2.setLastName("user2");
+		identityService.saveUser(user2);
+		
+		User user3 = identityService.newUser("");
+		user3.setId(null);
+		user3.setLastName("user3");	
+		identityService.saveUser(user3);
+		
+		Deployment deploy1 = repositoryService.createDeployment().addClasspathResource("process1.bpmn").name("deploy1").deploy();
+		Deployment deploy2 = repositoryService.createDeployment().addClasspathResource("process2.bpmn").name("deploy2").deploy();
+		
+		ProcessDefinition procDef1 = repositoryService.createProcessDefinitionQuery().deploymentId(deploy1.getId()).singleResult();
+		ProcessDefinition procDef2 = repositoryService.createProcessDefinitionQuery().deploymentId(deploy2.getId()).singleResult();
+		
+		repositoryService.addCandidateStarterUser(procDef1.getId(), user1.getId());
+		repositoryService.addCandidateStarterUser(procDef1.getId(), user2.getId());
+		repositoryService.addCandidateStarterUser(procDef2.getId(), user2.getId());
+		repositoryService.addCandidateStarterUser(procDef2.getId(), user3.getId());
+		
+		// ===================开始查询======================
+		List<IdentityLink> procDef1Users = repositoryService.getIdentityLinksForProcessDefinition(procDef1.getId());
+		List<IdentityLink> procDef2Users = repositoryService.getIdentityLinksForProcessDefinition(procDef2.getId());
+		
+		for(IdentityLink identityLink : procDef1Users) {
+			System.out.println(String.format("procDef.id = %s, user.id = %s", identityLink.getProcessDefinitionId(), identityLink.getUserId()));
+		}
+		
+		for(IdentityLink identityLink : procDef2Users) {
+			System.out.println(String.format("procDef.id = %s, user.id = %s", identityLink.getProcessDefinitionId(), identityLink.getUserId()));
+		}
+		
+		List<User> users1 = identityService.createUserQuery().potentialStarter(procDef1.getId()).list();
+		List<User> users2 = identityService.createUserQuery().potentialStarter(procDef2.getId()).list();
+		
+		for(User user : users1) {
+			System.out.println(String.format("procDef1.name = %s, user.name = %s", procDef1.getName(), user.getLastName()));
+		}
+		
+		for(User user : users2) {
+			System.out.println(String.format("procDef1.name = %s, user.name = %s", procDef2.getName(), user.getLastName()));
 		}
 	}
 }
