@@ -49,7 +49,9 @@ public void test1() {
 结果
 
 ```
-
+test1: 
+task1.id = 130001, task1.name = task1
+task2.id = 1001, task2.name = task2
 ```
 
 ## 2.任务候选人
@@ -118,7 +120,10 @@ public void test2() {
 结果
 
 ```
-
+user1-task1
+user2-task1
+user2-task2
+user3-task2
 ```
 
 ## 3.任务持有人
@@ -182,7 +187,9 @@ public void test3() {
 结果
 
 ```
-
+user1-task1
+user2-task2
+user2-task3
 ```
 
 ## 4.任务代理人
@@ -246,5 +253,7 @@ public void test4() {
 结果
 
 ```
-
+user1-task1
+user2-task2
+user2-task3
 ```

@@ -26,7 +26,7 @@ public class Main {
 		taskService.saveTask(task1);
 
 		// 指定id
-		Task task2 = taskService.newTask("taskid2");
+		Task task2 = taskService.newTask("1001");
 		task2.setName("task2");
 		taskService.saveTask(task2);
 
