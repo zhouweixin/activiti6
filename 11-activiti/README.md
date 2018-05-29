@@ -213,3 +213,144 @@ public void test3() {
 ```
 test3: 流程实例的个数12
 ```
+
+### (4) 流程参数的设置与查询
+
+需要区分的概念: 流程, 执行流
+需要区分的方法: setVariable, getVariable, setVariableLocal, getVariableLocal
+
+- 一个流程包含一个或多个执行流
+
+- setVariable设置的参数, 在流程未结束前都可用getVariable方法查到, 但不可用getVariableLocal方法查到
+
+- setVariableLocal设置的参数, 只有本执行流可以查到, 但是getVariable和getVariableLocal方法都可查到
+
+```java
+public void test4() {
+	// 加载引擎
+	ProcessEngine engine = ProcessEngines.getDefaultProcessEngine();
+	// 存储服务
+	RepositoryService repositoryService = engine.getRepositoryService();
+	// 运行时服务
+	RuntimeService runtimeService = engine.getRuntimeService();
+	// 任务服务
+	TaskService taskService = engine.getTaskService();
+
+	// 部署流程
+	repositoryService.createDeployment().addClasspathResource("VacationAuditProcess.bpmn").deploy();
+	
+	Map<String, Object> map = new HashMap<String, Object>();
+	map.put("days", 7);
+	// 启动流程
+	ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("vacationProcessId", map);
+
+	// 通过流程实例查询任务
+	List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstance.getId()).list();
+	for (Task task : tasks) {
+		// 查询执行流
+		Execution exe = runtimeService.createExecutionQuery().executionId(task.getExecutionId()).singleResult();
+		if ("Manager Audit".equals(task.getName())) {
+			// 查询参数
+			int days = (Integer) runtimeService.getVariable(exe.getId(), "days");
+			System.out.println(task.getName() + "--查到参数: days = " + days);
+
+			// 审核结果
+			runtimeService.setVariableLocal(exe.getId(), "m-audit", "不同意");
+			System.out.println(
+					task.getName() + "--添加参数: m-audit = " + runtimeService.getVariable(exe.getId(), "m-audit"));
+			System.out.println(task.getName() + "--添加参数: m-audit = "
+					+ runtimeService.getVariableLocal(exe.getId(), "m-audit"));
+
+			// 添加参数
+			map = new HashMap<String, Object>();
+			map.put("manager-result", "不同意");
+			taskService.complete(task.getId(), map);
+			System.out.println(task.getName() + "--添加参数: manager-result = "
+					+ runtimeService.getVariable(exe.getId(), "manager-result"));
+			System.out.println(task.getName() + "--添加参数: manager-result = "
+					+ runtimeService.getVariableLocal(exe.getId(), "manager-result"));
+		} else if ("HR Audit".equals(task.getName())) {
+			// 查询参数
+			int days = (Integer) runtimeService.getVariable(exe.getId(), "days");
+			System.out.println(task.getName() + "--查到参数: days = " + days);
+
+			// 审核结果
+			runtimeService.setVariableLocal(exe.getId(), "HR-audit", "同意");
+			System.out.println(
+					task.getName() + "--添加参数: HR-audit = " + runtimeService.getVariable(exe.getId(), "HR-audit"));
+			System.out.println(task.getName() + "--添加参数: HR-audit = "
+					+ runtimeService.getVariableLocal(exe.getId(), "HR-audit"));
+
+			// 添加参数
+			map = new HashMap<String, Object>();
+			map.put("HR-result", "同意");
+			taskService.complete(task.getId(), map);
+			System.out.println(
+					task.getName() + "--添加参数: HR-result = " + runtimeService.getVariable(exe.getId(), "HR-result"));
+			System.out.println(task.getName() + "--添加参数: HR-result = "
+					+ runtimeService.getVariableLocal(exe.getId(), "HR-result"));
+		}
+
+		Task endTask = taskService.createTaskQuery().processInstanceId(processInstance.getId()).singleResult();
+		Execution endExecution = runtimeService.createExecutionQuery().executionId(endTask.getExecutionId())
+				.singleResult();
+		System.out.println(task.getName() + "--查到的参数: days = " + runtimeService.getVariable(endExecution.getId(), "days"));
+		System.out.println(task.getName() + "--查到的参数: days = " + runtimeService.getVariableLocal(endExecution.getId(), "days"));
+		System.out.println(task.getName() + "--查到的参数: m-audit = " + runtimeService.getVariable(endExecution.getId(), "m-audit"));
+		System.out.println(task.getName() + "--查到的参数: m-audit = " + runtimeService.getVariableLocal(endExecution.getId(), "m-audit"));
+		System.out.println(task.getName() + "--查到的参数: manager-result = " + runtimeService.getVariable(endExecution.getId(), "manager-result"));
+		System.out.println(task.getName() + "--查到的参数: manager-result = " + runtimeService.getVariableLocal(endExecution.getId(), "manager-result"));
+		System.out.println(task.getName() + "--查到的参数: HR-audit = " + runtimeService.getVariable(endExecution.getId(), "HR-audit"));
+		System.out.println(task.getName() + "--查到的参数: HR-audit = " + runtimeService.getVariableLocal(endExecution.getId(), "HR-audit"));
+		System.out.println(task.getName() + "--查到的参数: HR-result = " + runtimeService.getVariable(endExecution.getId(), "HR-result"));
+		System.out.println(task.getName() + "--查到的参数: HR-result = " + runtimeService.getVariableLocal(endExecution.getId(), "HR-result"));
+	}
+}
+```
+
+结果
+
+```
+Manager Audit--查到参数: days = 7
+Manager Audit--添加参数: m-audit = 不同意
+Manager Audit--添加参数: m-audit = 不同意
+Manager Audit--添加参数: manager-result = 不同意
+Manager Audit--添加参数: manager-result = null
+Manager Audit-- 查到的参数: days = 7
+Manager Audit-- 查到的参数: days = null
+Manager Audit-- 查到的参数: m-audit = null
+Manager Audit-- 查到的参数: m-audit = null
+Manager Audit-- 查到的参数: manager-result = 不同意
+Manager Audit-- 查到的参数: manager-result = null
+Manager Audit-- 查到的参数: HR-audit = null
+Manager Audit-- 查到的参数: HR-audit = null
+Manager Audit-- 查到的参数: HR-result = null
+Manager Audit-- 查到的参数: HR-result = null
+HR Audit--查到参数: days = 7
+HR Audit--添加参数: HR-audit = 同意
+HR Audit--添加参数: HR-audit = 同意
+HR Audit--添加参数: HR-result = 同意
+HR Audit--添加参数: HR-result = null
+HR Audit-- 查到的参数: days = 7
+HR Audit-- 查到的参数: days = null
+HR Audit-- 查到的参数: m-audit = null
+HR Audit-- 查到的参数: m-audit = null
+HR Audit-- 查到的参数: manager-result = 不同意
+HR Audit-- 查到的参数: manager-result = null
+HR Audit-- 查到的参数: HR-audit = 同意
+HR Audit-- 查到的参数: HR-audit = 同意
+HR Audit-- 查到的参数: HR-result = 同意
+HR Audit-- 查到的参数: HR-result = null
+```
+
+### (5) 流程操作
+
+- 启动流程
+- 发送信号
+- 中断流程
+- 激活流程
+
+
+
+
+
