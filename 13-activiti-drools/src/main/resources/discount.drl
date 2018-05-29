@@ -1,0 +1,22 @@
+//created on: 2018-5-29
+package com.zhou
+
+rule "DiscountRuleGold"
+
+    when
+        $m : Member(identity == "gold")
+    then
+    	System.out.println("黄金会员打7折");
+        $m.setDiscount(0.7);
+
+end
+
+rule "DiscountRuleSilver"
+
+    when
+        $m : Member(identity == "silver")
+    then
+    	System.out.println("白银会员打8折");
+        $m.setDiscount(0.8);
+
+end
